@@ -15,9 +15,6 @@ const regIPPORT string = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.)
 const regDomainIPport string = "^(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|((\\*\\.)?([a-zA-Z0-9-]+\\.){0,5}[a-zA-Z0-9-][a-zA-Z0-9-]+\\.[a-zA-Z]{2,63}?)):([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[1-2][0-9]|6553[1-5])$"
 
 func main() {
-	ipDomainList := os.Getenv("IP_DOMAIN_LIST")
-	fmt.Println(ipDomainList)
-
 	flag.Usage = usage
 	ipup := flag.String("net", "0.0.0.0:123", "udp network to listen on <ipv4:port>")
 	flag.Parse()
@@ -37,10 +34,19 @@ func main() {
 		fmt.Println("no upstream ntp server is given, use local time")
 	} else {
 		for _, x := range getter.ArgNTP {
-			if match, _ := regexp.MatchString(regDomainIPport, x); !match {
-				fmt.Printf("fatal: %v is not a valid ntp upstream address\n", x)
-				flag.Usage()
-				os.Exit(2)
+			if strings.Contains(x, ":") {
+				if match, _ := regexp.MatchString(regDomainIPport, x); !match {
+					fmt.Printf("fatal: %v is not a valid ntp upstream address\n", x)
+					flag.Usage()
+					os.Exit(2)
+				}
+			} else {
+				x += ":123"
+				if match, _ := regexp.MatchString(regDomainIPport, x); !match {
+					fmt.Printf("fatal: %v is not a valid ntp upstream address\n", x)
+					flag.Usage()
+					os.Exit(2)
+				}
 			}
 		}
 	}
