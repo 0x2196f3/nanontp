@@ -122,6 +122,18 @@ func (p *_reactor) Run() {
 	}
 }
 
+func (p *_reactor) UseLocalTimeAsNTP() {
+	go func() {
+		for {
+			now := time.Now()
+			ntpTime := fmt.Sprintf("%04d%02d%02d%02d%02d%02d.%06d",
+				now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second(), now.Nanosecond()/1000)
+			p.udp_listeners[123].DatagramReceived([]byte(ntpTime), &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 123})
+			time.Sleep(1 * time.Second)
+		}
+	}()
+}
+
 func selectTimer(caller *LaterCalling) {
 	select {
 	case <-time.After(time.Duration(caller.millisecond) * time.Millisecond):
